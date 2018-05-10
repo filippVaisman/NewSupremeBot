@@ -1,5 +1,6 @@
 package sample;
 
+import Tests.*;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.web.WebEngine;
@@ -30,7 +31,12 @@ public class HandlerEventGenerator {
                     int length = domHandler.getElementsLengthByClass(className);
 
                     for(int i =0 ; i < length; i++){
-                        if(domHandler.getElementByClass(className,i).getTextContent().equals(productLoader.getProductName())){
+                        String s1 = domHandler.getElementByClass(className,i).getTextContent() ;
+                        String s2 = productLoader.getProductName();
+                        double d1 = WordEvaluater.evaluateSimilarytyByChars(s1,s2);
+                        double d2 =  WordEvaluater.evaluateSimilarytyByWords(s1,s2);
+                        System.out.println(d1+" "+d2);
+                        if(WordEvaluater.evaluateStrings(s1,s2)>0.8){
                             domHandler.clickElementByClass(className,i);
                             break;
                         }
@@ -42,8 +48,6 @@ public class HandlerEventGenerator {
 
 
     public EventHandler<ActionEvent> getAddToCartHandler(){
-
-
         return new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -52,9 +56,9 @@ public class HandlerEventGenerator {
                 domHandler.clickElementByClass("cart-button",0);
                 new Thread(()->{
                     try {
-                        Thread.sleep(500);
+                        //Thread.sleep(500);
                         domHandler.clickElementById("checkout-now");
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -124,9 +128,13 @@ public class HandlerEventGenerator {
 
         int length = domHandler.getElementsLengthByClass("style-images");
         logger.log(length);
-        for(int i =0 ; i < length+1; i++){
+        for(int i =0 ; i < length; i++){
             if(!domHandler.getElementById("style-name").getTextContent().equals(productLoader.getColor())){
-                domHandler.execute(String.format("document.getElementsByClassName('style-images')[%d].children[0].click();",i));
+                try {
+                    domHandler.execute(String.format("document.getElementsByClassName('style-thumb')[%d].click();",i));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }else{
                 logger.log("Color found");
                 break;
