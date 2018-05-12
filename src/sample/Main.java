@@ -4,6 +4,9 @@ import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -12,11 +15,15 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import sample.JavaScript.SimpleDomHandler;
-
-
+import sample.JavaScript.interfaces.DomHandler;
 
 
 public class Main extends Application {
@@ -41,6 +48,7 @@ public class Main extends Application {
         logger.log(e.getMessage());
         e.printStackTrace();
         }
+//        startControlsMenu(new Button("Start"),new Button("Refresh"));
 
     }
 
@@ -201,6 +209,8 @@ public class Main extends Application {
         WebView view = getWebView();
 
 
+//        view.getEngine().getLoadWorker().stateProperty()
+
 //        view.getEngine().getLoadWorker().stateProperty().addListener(
 //                new ChangeListener<State>() {
 //                    public void changed(ObservableValue ov, State oldState, State newState) {
@@ -229,40 +239,78 @@ public class Main extends Application {
 
 
         root.add(view,0,1);
-        root.add(box,0,0);
+//        root.add(box,0,0);
         primaryStage.setScene(new Scene(root, 640, 480));
 
+
+        PageChangeListener listener = new PageChangeListener(view,productLoader,userLoader);
+        view.getEngine().setOnStatusChanged(listener);
+
+        Stage controls = new Stage();
+
+
+        Button start = new Button("Start");
+        start.setOnAction(handlerEventGenerator.getProductHandler());
+
+        startControlsMenu(start,refresh);
+
+
+//        view.getEngine().setOnStatusChanged(new EventHandler<WebEvent<String>>() {
+//            @Override
+//            public void handle(WebEvent<String> event) {
+//                System.out.println("Js status changed "+event);
+//                Document doc = view.getEngine().getDocument();
+//                try {
+//                    Node html = doc.getElementsByTagName("html").item(0);
+////                    System.out.println(html.getAttributes().item(0).getTextContent());
+//                    String classHtmlElemnt = html.getAttributes().item(0).getTextContent();
+////                    System.out.println(classHtmlElemnt);
+//                    String pattern = "products.*";
+//
+//                    if(classHtmlElemnt.matches(pattern)){
+//                        DomHandler domHandler = new SimpleDomHandler(view.getEngine());
+//                        System.out.println("start adding to cart");
+//                        domHandler.clickElementByClass("cart-button",0);
+//                        try {
+//                            Thread.sleep(1000);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//
+//                    }
+//
+//                }catch (Exception e){
+//                    System.err.println("Html tag not found");
+//                }
+//
+//
+//            }
+//        });
         primaryStage.show();
-    }
 
-
-
-    private void findSize(SimpleDomHandler handler){
-        int length = handler.getElementLengthById("size-options");
-        for (int i =0 ; i < length;i++){
-            if(handler.execute(String.format("document.getElementById('size-options').children[%d].text",i)).equals(productLoader.getSize())){
-                handler.execute(String.format("document.getElementById('size-options').value = document.getElementById('size-options').children[%d].value;",i));
-                logger.log("Size found");
-            }
-        }
-    }
-
-
-    private void findColor(SimpleDomHandler handler){
-
-        int length = handler.getElementsLengthByClass("style-images");
-        logger.log(length);
-        for(int i =0 ; i < length+1; i++){
-            if(!handler.getElementById("style-name").getTextContent().equals(productLoader.getColor())){
-                handler.execute(String.format("document.getElementsByClassName('style-images')[%d].children[0].click();",i));
-            }else{
-                logger.log("Color found");
-                break;
-            }
-        }
 
     }
 
+    private void startControlsMenu(Button start, Button refresh){
+        StackPane root2 = new StackPane();
+
+        root2.setPadding(new Insets(50));
+
+        Scene scene2 = new Scene(root2,250,100);
+        Stage secondStage = new Stage();
+        secondStage.setTitle("Controls");
+        secondStage.setScene(scene2);
+
+        HBox hBox = new HBox();
+        hBox.getChildren().addAll(start,refresh);
+
+        root2.getChildren().addAll(hBox);
+
+        hBox.setSpacing(20);
+        secondStage.show();
+
+    }
 
 
     private void addListener(WebEngine engine){
@@ -285,6 +333,20 @@ public class Main extends Application {
         engine.setUserAgent("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Mobile Safari/537.36");
         engine.load("http://www.supremenewyork.com/mobile/#categories/new");
         return view;
+    }
+
+    private void trackUrl(WebView webView){
+        new Thread(()->{
+            while (true) {
+                System.out.println(webView.getEngine().getDocument());
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
 
 

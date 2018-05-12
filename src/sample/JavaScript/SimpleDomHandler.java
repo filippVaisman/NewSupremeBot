@@ -22,7 +22,12 @@ public class SimpleDomHandler implements DomHandler{
 
     @Override
     public Element getElementByClass(String className, int index) {
-        return (Element) engine.executeScript(scriptGenerator.getElementByClass(className,index));
+        try {
+            return (Element) engine.executeScript(scriptGenerator.getElementByClass(className,index));
+        }catch (Exception e){
+            System.out.println("Cast exception");
+            return null;
+        }
     }
 
     @Override
@@ -46,17 +51,6 @@ public class SimpleDomHandler implements DomHandler{
 
     public Object execute(String javascriptCode){
         Object e = engine.executeScript(javascriptCode);
-//        System.out.println(e);
-//        Element req=null;
-//        try {
-//            req = (Element)e;
-//        }catch (ClassCastException exc){
-//            System.err.println("Cast problem");
-//        }
-//
-//        if(req==null)
-//            return null;
-//        else
         return e;
     }
 
